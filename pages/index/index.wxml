@@ -19,7 +19,7 @@
       <view class="top-cards">
         <view class="treasury-card">
           <text class="card-label">TREASURY BALANCE</text>
-          <text class="balance">£{{balance}}</text>
+          <text class="balance">{{balanceDisplay}}</text>
           <text class="card-desc">Endless Blockchain Smart Contract</text>
         </view>
 

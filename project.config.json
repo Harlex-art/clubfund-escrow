@@ -16,7 +16,12 @@
 	"createTime": 1774093341866,
 	"accessTime": 1774093341866,
 	"packOptions": {
-		"ignore": []
+		"ignore": [
+			{"type": "folder", "value": "src"},
+			{"type": "folder", "value": ".next"},
+			{"type": "folder", "value": "node_modules"},
+			{"type": "folder", "value": ".git"}
+		]
 	},
 	"debugOptions": {
 		"hidedInDevtools": []
