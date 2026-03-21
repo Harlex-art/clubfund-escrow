@@ -29,19 +29,33 @@
       </view>
     </block>
 
-    <!-- Agreements List -->
-    <view class="list-section">
-      <text class="section-title">{{role === 'President' ? 'Active Escrows' : 'My Jobs'}}</text>
-      
-      <view wx:if="{{agreements.length === 0}}" class="empty-state">
-        <text>No agreements found.</text>
+    <!-- Vendor Login State -->
+    <view class="list-section" wx:if="{{role === 'Vendor' && !vendorLoggedIn}}">
+      <text class="section-title">Access Your Jobs</text>
+      <view class="create-card" style="flex-direction: column; height: auto; padding: 24px; gap: 16px;">
+        <input class="input" placeholder="Enter your Wallet ID" value="{{vendorLoginAddress}}" bindinput="onVendorLoginInput" />
+        <button class="action-btn indigo-btn" bindtap="handleVendorLogin">View My Jobs</button>
       </view>
+    </view>
 
-      <view class="agreement-card" wx:for="{{agreements}}" wx:key="id">
+    <!-- Agreements List -->
+    <block wx:if="{{role === 'President' || (role === 'Vendor' && vendorLoggedIn)}}">
+      <view class="list-section">
+        <text class="section-title">{{role === 'President' ? 'Active Escrows' : 'My Jobs'}}</text>
+        
+        <view wx:if="{{agreements.length === 0}}" class="empty-state">
+          <text>No agreements found.</text>
+        </view>
+
+        <block wx:for="{{agreements}}" wx:key="id">
+          <view class="agreement-card" wx:if="{{role === 'President' || (role === 'Vendor' && item.vendorAddress === vendorLoginAddress)}}">
         <view class="card-left">
           <view class="card-header">
-            <text class="id-badge">{{item.id}}</text>
-            <text class="status-badge {{item.status == 'Completed - Funds Released' ? 'status-green' : item.status == 'Verifying Completion' ? 'status-blue animate-pulse' : item.status == 'Active - Awaiting Vendor Completion' ? 'status-yellow' : 'status-gray'}}">{{item.status}}</text>
+            <view style="display: flex; flex-direction: column;">
+              <text class="id-badge">{{item.id}}</text>
+              <text wx:if="{{role === 'President' && item.createdAtFormatted}}" style="font-size: 11px; color: #94a3b8; margin-top: 4px;">{{item.createdAtFormatted}}</text>
+            </view>
+            <text class="status-badge {{item.status == 'Completed - Funds Released' ? 'status-green' : item.status == 'Verifying Completion' ? 'status-blue animate-pulse' : item.status == 'Active - Awaiting President Approval' ? 'status-blue' : item.status == 'Active - Awaiting Vendor Completion' ? 'status-yellow' : item.status == 'Disputed - Manual Review' ? 'status-red' : 'status-gray'}}">{{item.status}}</text>
           </view>
           <text class="job-title">{{item.title}}</text>
           <text class="job-amount">£{{item.amount}}</text>
@@ -57,7 +71,10 @@
           </block>
 
           <block wx:if="{{role === 'Vendor' && item.status === 'Active - Awaiting Vendor Completion'}}">
-             <button class="action-btn indigo-btn pulse-glow" bindtap="openVendorDialog" data-id="{{item.id}}">Submit Proof of Work</button>
+             <view class="action-wrap" wx:if="{{!item.vendorAddress || item.vendorAddress === walletAddress}}">
+               <button class="action-btn indigo-btn pulse-glow" bindtap="openVendorDialog" data-id="{{item.id}}">Submit Proof of Work</button>
+             </view>
+             <text wx:else class="wait-text">Not your assigned job</text>
           </block>
 
           <block wx:if="{{role === 'Vendor' && item.status === 'Pending Deposit'}}">
@@ -68,6 +85,38 @@
              <text class="verifying-text animate-pulse">✨ AI Verifying Proof...</text>
           </block>
 
+          <block wx:if="{{role === 'President' && item.aiAnalysis}}">
+             <view class="ai-analysis-box" style="margin-bottom: 8px; border-left-color: #0ea5e9;">
+               <text class="ai-title">📝 Vendor Proof:</text>
+               <text class="ai-text">{{item.vendorProofText}}</text>
+               <text wx:if="{{item.vendorProofUrl}}" class="ai-text" style="color: #3b82f6; margin-top: 4px; word-break: break-all;">Link: {{item.vendorProofUrl}}</text>
+             </view>
+
+             <view class="ai-analysis-box">
+               <text class="ai-title">🤖 AI Assistant Analysis:</text>
+               <text class="ai-text">{{item.aiAnalysis}}</text>
+             </view>
+          </block>
+
+          <block wx:if="{{item.status === 'Active - Awaiting President Approval'}}">
+             <block wx:if="{{role === 'President'}}">
+               <view class="approval-actions">
+                 <button class="action-btn green-btn" bindtap="handleApproveEscrow" data-id="{{item.id}}">Approve</button>
+                 <button class="action-btn red-btn" bindtap="handleDisputeEscrow" data-id="{{item.id}}">Dispute</button>
+               </view>
+               <text class="time-lock-text">{{item.countdownText || '⏳ Auto-releases in 48 hours'}}</text>
+             </block>
+             
+             <block wx:if="{{role === 'Vendor'}}">
+               <text class="wait-text">Waiting for President to approve...</text>
+               <text class="time-lock-text">{{item.countdownText || '⏳ Auto-releases in 48 hours'}}</text>
+             </block>
+          </block>
+
+          <block wx:if="{{item.status === 'Disputed - Manual Review'}}">
+             <text class="wait-text" style="color: #dc2626; font-weight: bold;">Disputed: Awaiting Manual Review by Admin.</text>
+          </block>
+
           <block wx:if="{{item.status === 'Completed - Funds Released'}}">
              <view class="paid-badge">
                <text class="paid-icon">✓</text>
@@ -76,7 +125,9 @@
           </block>
         </view>
       </view>
+      </block>
     </view>
+    </block>
   </view>
 
   <!-- Create Agreement Dialog -->
@@ -94,6 +145,14 @@
           <text class="label">Amount (£)</text>
           <input class="input" type="number" placeholder="150" value="{{newAmount}}" bindinput="onAmountInput" />
         </view>
+        <view class="form-group">
+          <text class="label">Vendor Wallet Address</text>
+          <input class="input" placeholder="0x..." value="{{newVendorAddress}}" bindinput="onVendorAddressInput" />
+        </view>
+        <view class="form-group">
+          <text class="label">Contract Terms &amp; Conditions</text>
+          <textarea class="textarea" placeholder="Detail the exact requirements for the job..." value="{{newTerms}}" bindinput="onTermsInput"></textarea>
+        </view>
       </view>
       <view class="dialog-footer">
         <button class="cancel-btn" bindtap="closeDialog">Cancel</button>
@@ -109,9 +168,17 @@
         <text class="dialog-title">Submit Proof of Work</text>
       </view>
       <view class="dialog-body">
+        <view class="terms-display-box">
+          <text class="terms-label">Required Terms:</text>
+          <text class="terms-content">{{activeAgreementTerms}}</text>
+        </view>
+        <view class="form-group" style="margin-top: 16px;">
+          <text class="label">Justification (How did you meet the terms?)</text>
+          <textarea class="textarea" placeholder="I completed the job by..." value="{{vendorProofText}}" bindinput="onProofTextInput"></textarea>
+        </view>
         <view class="form-group">
-          <text class="label">Provide a dummy link to trigger the AI Agent scan:</text>
-          <input class="input" placeholder="e.g. drive.google.com/folder" value="{{vendorProof}}" bindinput="onProofInput" />
+          <text class="label">Image / Receipt URL (Optional)</text>
+          <input class="input" placeholder="e.g. imgur.com/receipt.jpg" value="{{vendorProofUrl}}" bindinput="onProofUrlInput" />
         </view>
       </view>
       <view class="dialog-footer">
