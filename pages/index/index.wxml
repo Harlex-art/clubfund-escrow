@@ -1,0 +1,124 @@
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="logo-title">
+      <view class="logo">L</view>
+      <text class="title">Luffa App</text>
+      <text class="subtitle">ClubFund Escrow</text>
+    </view>
+    <view class="role-switch">
+      <text class="role-btn {{role === 'President' ? 'active' : ''}}" bindtap="setRolePresident">President</text>
+      <text class="role-btn {{role === 'Vendor' ? 'active' : ''}}" bindtap="setRoleVendor">Vendor</text>
+    </view>
+  </view>
+
+  <view class="main-content">
+    
+    <!-- Treasury Card (President Only) -->
+    <block wx:if="{{role === 'President'}}">
+      <view class="top-cards">
+        <view class="treasury-card">
+          <text class="card-label">TREASURY BALANCE</text>
+          <text class="balance">£{{balance}}</text>
+          <text class="card-desc">Endless Blockchain Smart Contract</text>
+        </view>
+
+        <view class="create-card" bindtap="openDialog">
+          <text class="create-text">+ Create Agreement</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- Agreements List -->
+    <view class="list-section">
+      <text class="section-title">{{role === 'President' ? 'Active Escrows' : 'My Jobs'}}</text>
+      
+      <view wx:if="{{agreements.length === 0}}" class="empty-state">
+        <text>No agreements found.</text>
+      </view>
+
+      <view class="agreement-card" wx:for="{{agreements}}" wx:key="id">
+        <view class="card-left">
+          <view class="card-header">
+            <text class="id-badge">{{item.id}}</text>
+            <text class="status-badge {{item.status == 'Completed - Funds Released' ? 'status-green' : item.status == 'Verifying Completion' ? 'status-blue animate-pulse' : item.status == 'Active - Awaiting Vendor Completion' ? 'status-yellow' : 'status-gray'}}">{{item.status}}</text>
+          </view>
+          <text class="job-title">{{item.title}}</text>
+          <text class="job-amount">£{{item.amount}}</text>
+        </view>
+
+        <view class="card-right">
+          <block wx:if="{{role === 'President' && item.status === 'Pending Deposit'}}">
+             <button class="action-btn blue-btn" bindtap="handleDeposit" data-id="{{item.id}}">Deposit Funds</button>
+          </block>
+          
+          <block wx:if="{{role === 'President' && item.status === 'Active - Awaiting Vendor Completion'}}">
+             <text class="wait-text">Waiting for vendor...</text>
+          </block>
+
+          <block wx:if="{{role === 'Vendor' && item.status === 'Active - Awaiting Vendor Completion'}}">
+             <button class="action-btn indigo-btn pulse-glow" bindtap="openVendorDialog" data-id="{{item.id}}">Submit Proof of Work</button>
+          </block>
+
+          <block wx:if="{{role === 'Vendor' && item.status === 'Pending Deposit'}}">
+             <text class="wait-text">Waiting for deposit...</text>
+          </block>
+
+          <block wx:if="{{item.status === 'Verifying Completion'}}">
+             <text class="verifying-text animate-pulse">✨ AI Verifying Proof...</text>
+          </block>
+
+          <block wx:if="{{item.status === 'Completed - Funds Released'}}">
+             <view class="paid-badge">
+               <text class="paid-icon">✓</text>
+               <text class="paid-text">Paid</text>
+             </view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Create Agreement Dialog -->
+  <view class="dialog-mask" wx:if="{{isDialogOpen}}">
+    <view class="dialog fade-in-up">
+      <view class="dialog-header">
+        <text class="dialog-title">New Escrow Agreement</text>
+      </view>
+      <view class="dialog-body">
+        <view class="form-group">
+          <text class="label">Job Description</text>
+          <input class="input" placeholder="e.g. Hire DJ for £150" value="{{newTitle}}" bindinput="onTitleInput" />
+        </view>
+        <view class="form-group">
+          <text class="label">Amount (£)</text>
+          <input class="input" type="number" placeholder="150" value="{{newAmount}}" bindinput="onAmountInput" />
+        </view>
+      </view>
+      <view class="dialog-footer">
+        <button class="cancel-btn" bindtap="closeDialog">Cancel</button>
+        <button class="submit-btn" bindtap="handleCreateAgreement">Create</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Vendor Proof Dialog -->
+  <view class="dialog-mask" wx:if="{{isVendorDialogOpen}}">
+    <view class="dialog fade-in-up">
+      <view class="dialog-header">
+        <text class="dialog-title">Submit Proof of Work</text>
+      </view>
+      <view class="dialog-body">
+        <view class="form-group">
+          <text class="label">Provide a dummy link to trigger the AI Agent scan:</text>
+          <input class="input" placeholder="e.g. drive.google.com/folder" value="{{vendorProof}}" bindinput="onProofInput" />
+        </view>
+      </view>
+      <view class="dialog-footer">
+        <button class="cancel-btn" bindtap="closeVendorDialog">Cancel</button>
+        <button class="submit-btn indigo-bg" bindtap="handleMarkComplete">Run AI Scan</button>
+      </view>
+    </view>
+  </view>
+
+</view>

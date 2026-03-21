@@ -1,0 +1,355 @@
+.container {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Header */
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo-title {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  background: #2563eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0f172a;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-left: 8px;
+}
+
+.role-switch {
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 20px;
+  display: flex;
+}
+
+.role-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #64748b;
+  border-radius: 16px;
+}
+
+.role-btn.active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-weight: 500;
+}
+
+.main-content {
+  padding: 16px;
+}
+
+/* Top Cards */
+.top-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.treasury-card {
+  background: linear-gradient(135deg, #2563eb, #4338ca);
+  border-radius: 12px;
+  padding: 24px;
+  color: #fff;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #bfdbfe;
+  letter-spacing: 1px;
+}
+
+.balance {
+  font-size: 32px;
+  font-weight: bold;
+  display: block;
+  margin-top: 8px;
+}
+
+.card-desc {
+  font-size: 14px;
+  color: #bfdbfe;
+  display: block;
+  margin-top: 8px;
+}
+
+.create-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.create-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0f172a;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.agreement-card {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.card-left {
+  padding: 20px;
+  flex: 1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.id-badge {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.status-green { background: #dcfce7; color: #166534; }
+.status-blue { background: #dbeafe; color: #1e40af; }
+.status-yellow { background: #fef9c3; color: #854d0e; }
+.status-gray { background: #f1f5f9; color: #1e293b; }
+
+.job-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #0f172a;
+  display: block;
+}
+
+.job-amount {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e293b;
+  display: block;
+  margin-top: 8px;
+}
+
+.card-right {
+  background: #f8fafc;
+  padding: 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn {
+  width: 100%;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.blue-btn { background: #2563eb; }
+.indigo-btn { background: #4f46e5; }
+.indigo-bg { background: #4f46e5; color: #fff; border: 0;}
+
+.wait-text {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  text-align: center;
+}
+
+.verifying-text {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #bfdbfe;
+  font-weight: bold;
+}
+
+.paid-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.paid-icon {
+  width: 32px;
+  height: 32px;
+  background: #dcfce7;
+  color: #16a34a;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.paid-text {
+  font-size: 14px;
+  font-weight: bold;
+  color: #15803d;
+}
+
+/* Dialog */
+.dialog-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  background: #fff;
+  width: 85%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dialog-header {
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dialog-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dialog-footer {
+  display: flex;
+  padding: 16px;
+  background: #f8fafc;
+  gap: 12px;
+}
+
+.cancel-btn {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+.submit-btn {
+  flex: 1;
+  background: #0f172a;
+  color: #fff;
+  font-size: 14px;
+}
+
+/* Animations (Integration & Polish Phase) */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.98); }
+}
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-glow {
+  box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+  animation: pulse 2.5s infinite;
+}
