@@ -35,9 +35,9 @@ Page({
     vendorProofText: '',
     vendorProofUrl: '',
     activeAgreementId: '',
+    isAgreementCompleted: false,
 
     windowHeight: 600,
-    dialogMaxHeight: 360,
     keyboardHeight: 0
   },
 
@@ -47,7 +47,8 @@ Page({
     try {
       const sys = wx.getSystemInfoSync();
       const wh = sys.windowHeight || 600;
-      self.setData({ windowHeight: wh, dialogMaxHeight: Math.round(wh * 0.6) });
+      this.platform = sys.platform || 'devtools';
+      self.setData({ windowHeight: wh });
     } catch (e) { }
     setTimeout(() => {
       luffa.connect({ url: '', icon: '' })
@@ -66,8 +67,15 @@ Page({
         .catch(err => {
           console.error("Wallet connect failed:", err);
           // DevTools simulator does not support invokeNativePlugin.
-          // Show a simulated balance so the UI is previewable in the IDE.
-          self.setData({ balanceDisplay: '10.00 EDS (Simulator)' });
+          // Show constant demo values so the UI is ready for presentation.
+          const demoAddress = 'Cpx1em8x6u4zDNh9kga9rzwhJfucufVCqeUEYjZneQNX';
+          self.setData({
+            walletAddress: demoAddress,
+            role: 'Treasurer',
+            balance: 500.00,
+            balanceDisplay: '500.00 EDS'
+          });
+          console.log('[Demo] Wallet and Balance simulated for IDE');
         });
     }, 500);
 
@@ -100,88 +108,21 @@ Page({
   },
 
   fetchBalance: function (address) {
-    wx.request({
-      url: 'https://rpc-test.endless.link/v1/view',
-      method: 'POST',
-      header: { 'Content-Type': 'application/json' },
-      data: {
-        function: "0x1::primary_fungible_store::balance",
-        type_arguments: ["0x1::endless_coin::EndlessCoin"],
-        arguments: [address]
-      },
-      success: (res) => {
-        console.log('[Balance] statusCode:', res.statusCode, 'data:', JSON.stringify(res.data));
-
-        try {
-          // Robust recursive parser to handle various RPC response formats
-          const findValue = (obj) => {
-            if (obj === null || obj === undefined) return null;
-            if (typeof obj === 'number') return obj;
-
-            // Handle hex strings first
-            if (typeof obj === 'string' && obj.startsWith('0x')) {
-              const h = parseInt(obj, 16);
-              if (!isNaN(h)) return h;
-            }
-
-            // Handle numeric strings
-            if (typeof obj === 'string' && obj.trim() !== '' && !isNaN(obj)) return obj;
-
-            if (Array.isArray(obj)) {
-              for (const item of obj) {
-                const v = findValue(item);
-                if (v !== null) return v;
-              }
-            }
-
-            if (typeof obj === 'object') {
-              // Priority keys for blockchain RPCs
-              const priority = ['result', 'value', 'data', 'balance'];
-              for (const k of priority) {
-                if (obj[k] !== undefined) {
-                  const v = findValue(obj[k]);
-                  if (v !== null) return v;
-                }
-              }
-              // Fallback: check all keys
-              for (const k in obj) {
-                if (!priority.includes(k)) {
-                  const v = findValue(obj[k]);
-                  if (v !== null) return v;
-                }
-              }
-            }
-            return null;
-          };
-
-          const raw = findValue(res.data);
-          const parsed = parseInt(raw);
-
-          if (!isNaN(parsed)) {
-            const eds = (parsed / 100000000).toFixed(2);
-            this.setData({ balance: parseFloat(eds), balanceDisplay: `${eds} EDS (Testnet)` });
-          } else {
-            // API returned but could not be parsed as a numeric balance
-            this.setData({ balanceDisplay: 'EDS Testnet' });
-          }
-        } catch (e) {
-          console.error('[Balance] Parse exception:', e.message);
-          this.setData({ balanceDisplay: 'EDS Testnet' });
-        }
-      },
-      fail: (err) => {
-        console.error('[Balance] Request failed:', JSON.stringify(err));
-        this.setData({ balanceDisplay: 'EDS Testnet' });
-      }
-    });
+    // For Demo: Only set initial balance if it's still at 0
+    if (this.data.balance === 0) {
+      const initialBalance = 500.00;
+      const isDev = this.platform === 'devtools';
+      this.setData({
+        balance: initialBalance,
+        balanceDisplay: `${initialBalance.toFixed(2)} EDS${isDev ? ' (Demo)' : ''}`
+      });
+      console.log('[Demo] Initial treasury balance set to 500.00');
+    }
   },
 
   onKeyboardHeightChange: function (e) {
     const kh = e.detail.height || 0;
-    const wh = this.data.windowHeight;
-    // When keyboard is up, shrink the scroll area and shift the dialog above the keyboard
-    const maxH = kh > 0 ? Math.max(80, wh - kh - 180) : Math.round(wh * 0.6);
-    this.setData({ dialogMaxHeight: maxH, keyboardHeight: kh });
+    this.setData({ keyboardHeight: kh });
   },
 
   setRoleTreasurer: function () { this.setData({ role: 'Treasurer' }) },
@@ -238,7 +179,11 @@ Page({
       wx.showToast({ title: 'No jobs found for this address', icon: 'none' });
       return;
     }
-    this.setData({ vendorLoggedIn: true });
+    this.setData({
+      vendorLoggedIn: true,
+      walletAddress: address,
+      role: 'Vendor'
+    });
     wx.showToast({ title: 'Logged In', icon: 'success' });
   },
 
@@ -250,6 +195,7 @@ Page({
     this.setData({
       isVendorDialogOpen: true,
       isEditingProof: isEditing,
+      isAgreementCompleted: agreement ? (agreement.status === 'Completed - Funds Released') : false,
       activeAgreementId: id,
       activeAgreementTerms: agreement ? agreement.terms : '',
       vendorProofText: agreement ? (agreement.vendorProofText || '') : '',
@@ -257,7 +203,7 @@ Page({
     });
   },
   closeVendorDialog: function () {
-    this.setData({ isVendorDialogOpen: false, isEditingProof: false, vendorProofText: '', vendorProofUrl: '', activeAgreementId: '' });
+    this.setData({ isVendorDialogOpen: false, isEditingProof: false, isAgreementCompleted: false, vendorProofText: '', vendorProofUrl: '', activeAgreementId: '' });
   },
   onProofTextInput: function (e) { this.setData({ vendorProofText: e.detail.value }) },
   onProofUrlInput: function (e) { this.setData({ vendorProofUrl: e.detail.value }) },
@@ -266,11 +212,13 @@ Page({
     const { newTitle, newAmount, newVendorAddress, newTermsList, activeTermsCount, newLocation, newEventType, agreements } = this.data;
     const filledTerms = newTermsList.slice(0, activeTermsCount).filter(t => t.trim());
 
-    // --- Field presence check ---
-    if (!newTitle || !newAmount || !newVendorAddress.trim() || filledTerms.length === 0) {
-      wx.showToast({ title: 'All fields required', icon: 'none' });
-      return;
-    }
+    // --- Field presence check with specific feedback ---
+    if (!newTitle) { wx.showToast({ title: 'Enter Job Title', icon: 'none' }); return; }
+    if (!newAmount) { wx.showToast({ title: 'Enter Amount', icon: 'none' }); return; }
+    if (!newVendorAddress.trim()) { wx.showToast({ title: 'Enter Vendor Address', icon: 'none' }); return; }
+    if (filledTerms.length === 0) { wx.showToast({ title: 'Add at least one requirement', icon: 'none' }); return; }
+
+    console.log('[Create] Validation passed');
 
     // --- Amount validation ---
     const amount = parseFloat(newAmount);
@@ -279,7 +227,7 @@ Page({
       return;
     }
     if (amount < 1) {
-      wx.showToast({ title: 'Minimum amount is £1', icon: 'none' });
+      wx.showToast({ title: 'Minimum is £1', icon: 'none' });
       return;
     }
 
@@ -307,7 +255,7 @@ Page({
         content: `You're creating an escrow for £${amount.toFixed(2)}. Please confirm this is correct.`,
         confirmText: 'Yes, Confirm',
         cancelText: 'Go Back',
-        confirmColor: '#4f46e5',
+        confirmColor: '#84B179',
         success: (res) => { if (res.confirm) doCreate(); }
       });
     } else {
@@ -334,33 +282,41 @@ Page({
 
   executeDeposit: function (id, agreement, address) {
     wx.showLoading({ title: 'Awaiting Wallet Signature...' });
-
-    // We use signMessage here to trigger the real Luffa wallet popup.
-    // This is because we don't have a deployed Endless smart contract yet.
-    // In production, this would be replaced by luffa.transfer() + luffa.signAndSubmit().
-    // The message the Treasurer signs is a human-readable escrow authorization.
     const depositMessage = `Authorize ClubFund Escrow deposit of ${agreement.amount} EDS for: "${agreement.title}"`;
 
-    luffa.signMessage(depositMessage, Date.now(), address)
-      .then(res => {
-        wx.hideLoading();
-        console.log(`[Blockchain] Deposit authorized. Signature: ${res.data && res.data.signature}`);
-        const updated = this.data.agreements.map(a => {
-          if (a.id === id) {
-            this.setData({ balance: this.data.balance - a.amount });
-            return { ...a, status: "Active - Awaiting Vendor Acceptance" };
-          }
-          return a;
-        });
-        this.setData({ agreements: updated });
-        wx.showToast({ title: 'Funds Locked in Escrow!', icon: 'success' });
-      })
-      .catch(err => {
-        // If the user explicitly hits "Cancel" on the wallet popup, abort cleanly.
-        wx.hideLoading();
-        console.error('Deposit signature rejected or cancelled:', err);
-        wx.showToast({ title: 'Deposit Cancelled', icon: 'none' });
+    const handleSuccess = (res) => {
+      wx.hideLoading();
+      console.log(`[Blockchain] Deposit authorized. Signature: ${res.data && res.data.signature}`);
+      const updated = this.data.agreements.map(a => {
+        if (a.id === id) {
+          const newBalance = this.data.balance - a.amount;
+          const isDev = this.platform === 'devtools';
+          this.setData({
+            balance: newBalance,
+            balanceDisplay: `${newBalance.toFixed(2)} EDS${isDev ? ' (Demo)' : ''}`
+          });
+          return { ...a, status: "Active - Awaiting Vendor Acceptance" };
+        }
+        return a;
       });
+      this.setData({ agreements: updated });
+      wx.showToast({ title: 'Funds Locked in Escrow!', icon: 'success' });
+    };
+
+    if (this.platform === 'devtools') {
+      // Mock success for simulator demo
+      setTimeout(() => {
+        handleSuccess({ data: { signature: 'MOCK_SIG_' + Date.now() } });
+      }, 1500);
+    } else {
+      luffa.signMessage(depositMessage, Date.now(), address)
+        .then(handleSuccess)
+        .catch(err => {
+          wx.hideLoading();
+          console.error('Deposit signature rejected or cancelled:', err);
+          wx.showToast({ title: 'Deposit Cancelled', icon: 'none' });
+        });
+    }
   },
 
   handleVendorAccept: function (e) {
@@ -398,13 +354,10 @@ Page({
     }
 
     const combinedProof = `Justification: ${vendorProofText}\nReceipt Link: ${vendorProofUrl}`;
-
-    // Find the agreement to determine its prior status (for rollback on error)
     const priorAgreement = agreements.find(a => a.id === id);
     const rollbackStatus = isEditingProof ? "Active - Awaiting Treasurer Approval" : "Active - Awaiting Vendor Completion";
 
     this.setData({ isVendorDialogOpen: false, isEditingProof: false });
-    // Save new proof values immediately so both views reflect the latest text
     let updated = agreements.map(a =>
       a.id === id ? { ...a, status: "Verifying Completion", vendorProofText, vendorProofUrl, aiAnalysis: '' } : a
     );
@@ -415,20 +368,26 @@ Page({
 
     const addressToSignWith = walletAddress || "0x9c313a29aa9888cc8b8db4e4c2db27d498cdcc6dfc785bf296316bf";
 
-    luffa.signMessage(combinedProof, 1, addressToSignWith)
-      .then(signRes => {
-        this.executeOracleCall(id, combinedProof);
-      })
-      .catch(err => {
-        console.error('Signature failed or cancelled:', err);
-        wx.hideLoading();
-        wx.showToast({ title: 'Signature Cancelled', icon: 'none' });
-        // Roll back to the correct prior state
-        const rolledBack = this.data.agreements.map(a =>
-          a.id === id ? { ...a, status: rollbackStatus, vendorProofText: priorAgreement.vendorProofText, vendorProofUrl: priorAgreement.vendorProofUrl } : a
-        );
-        this.setData({ agreements: rolledBack });
-      });
+    const handleSuccess = (signRes) => {
+      this.executeOracleCall(id, combinedProof);
+    };
+
+    if (this.platform === 'devtools') {
+      // Mock success for simulator
+      setTimeout(() => handleSuccess({ data: { signature: 'MOCK_PROOF_SIG' } }), 1500);
+    } else {
+      luffa.signMessage(combinedProof, 1, addressToSignWith)
+        .then(handleSuccess)
+        .catch(err => {
+          console.error('Signature failed or cancelled:', err);
+          wx.hideLoading();
+          wx.showToast({ title: 'Signature Cancelled', icon: 'none' });
+          const rolledBack = this.data.agreements.map(a =>
+            a.id === id ? { ...a, status: rollbackStatus, vendorProofText: priorAgreement.vendorProofText, vendorProofUrl: priorAgreement.vendorProofUrl } : a
+          );
+          this.setData({ agreements: rolledBack });
+        });
+    }
   },
 
   executeOracleCall: function (id, vendorProof) {
@@ -442,7 +401,7 @@ Page({
       method: 'POST',
       header: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sk-proj-MASKED_FOR_SECURITY'
+        'Authorization': 'Bearer enter your OPEN AI API KEY Here'
       },
       data: {
         model: "gpt-4o-mini",
@@ -505,12 +464,37 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: 'Dispute Escrow',
-      content: 'Are you sure you want to dispute this proof? Funds will be locked for manual review.',
+      content: 'Are you sure you want to dispute this proof? You must meeet the other party to reach a mutual settlement.',
+      confirmColor: '#dc2626',
       success: (res) => {
         if (res.confirm) {
           const updated = this.data.agreements.map(a => a.id === id ? { ...a, status: "Disputed - Manual Review" } : a);
           this.setData({ agreements: updated });
           wx.showToast({ title: 'Escrow Disputed', icon: 'none' });
+        }
+      }
+    });
+  },
+
+  handleRefundEscrow: function (e) {
+    const id = e.currentTarget.dataset.id;
+    const agreement = this.data.agreements.find(a => a.id === id);
+    wx.showModal({
+      title: 'Refund Escrow',
+      content: `Are you sure you want to refund £${agreement.amount.toFixed(2)} back to the Treasury? This will cancel the agreement.`,
+      confirmColor: '#dc2626',
+      success: (res) => {
+        if (res.confirm) {
+          const newBalance = this.data.balance + agreement.amount;
+          const isDev = this.platform === 'devtools';
+          const updated = this.data.agreements.map(a => a.id === id ? { ...a, status: "Cancelled - Refunded to Club" } : a);
+
+          this.setData({
+            agreements: updated,
+            balance: newBalance,
+            balanceDisplay: `${newBalance.toFixed(2)} EDS${isDev ? ' (Demo)' : ''}`
+          });
+          wx.showToast({ title: 'Funds Refunded', icon: 'success' });
         }
       }
     });
