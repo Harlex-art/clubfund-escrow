@@ -16,7 +16,7 @@
 
 ## HERO SECTION
 <p align="center">
-  <img width="1728" alt="Vault Pact Interface" src="YOUR_SCREENSHOT_URL">
+  <img width="1728" alt="Vault Pact Interface" src="Assets/images/hero-image.png">
   <!-- Add screenshot here -->
 </p>
 
