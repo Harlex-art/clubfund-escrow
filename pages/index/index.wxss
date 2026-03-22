@@ -8,8 +8,8 @@
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
   padding: 16px;
   position: sticky;
   top: 0;
@@ -41,9 +41,10 @@
 }
 
 .subtitle {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 30px;
+  color: #032c66ff;
   margin-left: 8px;
+  font-weight: bold;
 }
 
 .role-switch {
@@ -51,6 +52,7 @@
   padding: 4px;
   border-radius: 20px;
   display: flex;
+  margin-top: 12px;
 }
 
 .role-btn {
@@ -109,16 +111,16 @@
 .create-card {
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100px;
+  height: 60px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .create-text {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 500;
   color: #0f172a;
 }
@@ -177,12 +179,13 @@
 }
 .status-green { background: #dcfce7; color: #166534; }
 .status-blue { background: #dbeafe; color: #1e40af; }
+.status-purple { background: #ede9fe; color: #5b21b6; }
 .status-yellow { background: #fef9c3; color: #854d0e; }
 .status-red { background: #fee2e2; color: #991b1b; }
 .status-gray { background: #f1f5f9; color: #1e293b; }
 
 .job-title {
-  font-size: 16px;
+  font-size: 26px;
   font-weight: bold;
   color: #0f172a;
   display: block;
@@ -270,14 +273,15 @@
   background: rgba(0,0,0,0.5);
   z-index: 100;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 0;
 }
 
 .dialog {
   background: #fff;
-  width: 85%;
-  border-radius: 12px;
+  width: 100%;
+  border-radius: 16px 16px 0 0;
   overflow: hidden;
 }
 
@@ -293,6 +297,22 @@
 
 .dialog-body {
   padding: 20px;
+}
+
+.vetting-reminder {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.vetting-reminder-text {
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.5;
+  display: block;
 }
 
 .form-group {

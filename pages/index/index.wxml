@@ -1,21 +1,19 @@
-<view class="container">
+﻿<view class="container">
   <!-- Header -->
   <view class="header">
     <view class="logo-title">
-      <view class="logo">L</view>
-      <text class="title">Luffa App</text>
-      <text class="subtitle">ClubFund Escrow</text>
+      <text class="subtitle">Vault Pact</text>
     </view>
     <view class="role-switch">
-      <text class="role-btn {{role === 'President' ? 'active' : ''}}" bindtap="setRolePresident">President</text>
+      <text class="role-btn {{role === 'Treasurer' ? 'active' : ''}}" bindtap="setRoleTreasurer">Treasurer</text>
       <text class="role-btn {{role === 'Vendor' ? 'active' : ''}}" bindtap="setRoleVendor">Vendor</text>
     </view>
   </view>
 
   <view class="main-content">
     
-    <!-- Treasury Card (President Only) -->
-    <block wx:if="{{role === 'President'}}">
+    <!-- Treasury Card (Treasurer Only) -->
+    <block wx:if="{{role === 'Treasurer'}}">
       <view class="top-cards">
         <view class="treasury-card">
           <text class="card-label">TREASURY BALANCE</text>
@@ -39,34 +37,36 @@
     </view>
 
     <!-- Agreements List -->
-    <block wx:if="{{role === 'President' || (role === 'Vendor' && vendorLoggedIn)}}">
+    <block wx:if="{{role === 'Treasurer' || (role === 'Vendor' && vendorLoggedIn)}}">
       <view class="list-section">
-        <text class="section-title">{{role === 'President' ? 'Active Escrows' : 'My Jobs'}}</text>
+        <text class="section-title">{{role === 'Treasurer' ? 'Active Escrows' : 'My Jobs'}}</text>
         
         <view wx:if="{{agreements.length === 0}}" class="empty-state">
           <text>No agreements found.</text>
         </view>
 
         <block wx:for="{{agreements}}" wx:key="id">
-          <view class="agreement-card" wx:if="{{role === 'President' || (role === 'Vendor' && item.vendorAddress === vendorLoginAddress)}}">
+          <view class="agreement-card" wx:if="{{role === 'Treasurer' || (role === 'Vendor' && item.vendorAddress === vendorLoginAddress)}}">
         <view class="card-left">
           <view class="card-header">
-            <view style="display: flex; flex-direction: column;">
-              <text class="id-badge">{{item.id}}</text>
-              <text wx:if="{{role === 'President' && item.createdAtFormatted}}" style="font-size: 11px; color: #94a3b8; margin-top: 4px;">{{item.createdAtFormatted}}</text>
-            </view>
-            <text class="status-badge {{item.status == 'Completed - Funds Released' ? 'status-green' : item.status == 'Verifying Completion' ? 'status-blue animate-pulse' : item.status == 'Active - Awaiting President Approval' ? 'status-blue' : item.status == 'Active - Awaiting Vendor Completion' ? 'status-yellow' : item.status == 'Disputed - Manual Review' ? 'status-red' : 'status-gray'}}">{{item.status}}</text>
+            <text class="id-badge">{{item.id}}</text>
+            <text class="status-badge {{item.status == 'Completed - Funds Released' ? 'status-green' : item.status == 'Verifying Completion' ? 'status-blue animate-pulse' : item.status == 'Active - Awaiting Treasurer Approval' ? 'status-blue' : item.status == 'Active - Awaiting Vendor Acceptance' ? 'status-purple' : item.status == 'Active - Awaiting Vendor Completion' ? 'status-yellow' : item.status == 'Disputed - Manual Review' ? 'status-red' : item.status == 'Declined - Vendor Refused' ? 'status-red' : 'status-gray'}}">{{item.status}}</text>
           </view>
+          <text wx:if="{{role === 'Treasurer' && item.createdAtFormatted}}" style="font-size: 11px; color: #94a3b8; margin-bottom: 10px; font-weight: bold;">{{item.createdAtFormatted}}</text>
           <text class="job-title">{{item.title}}</text>
           <text class="job-amount">£{{item.amount}}</text>
+          <view wx:if="{{item.location || item.eventType}}" style="margin-top: 6px; display: flex; flex-direction: column; gap: 2px;">
+            <text wx:if="{{item.location}}" style="font-size: 12px; color: #64748b;">📍 {{item.location}}</text>
+            <text wx:if="{{item.eventType}}" style="font-size: 12px; color: #64748b;">🎉 {{item.eventType}}</text>
+          </view>
         </view>
 
         <view class="card-right">
-          <block wx:if="{{role === 'President' && item.status === 'Pending Deposit'}}">
+          <block wx:if="{{role === 'Treasurer' && item.status === 'Pending Deposit'}}">
              <button class="action-btn blue-btn" bindtap="handleDeposit" data-id="{{item.id}}">Deposit Funds</button>
           </block>
           
-          <block wx:if="{{role === 'President' && item.status === 'Active - Awaiting Vendor Completion'}}">
+          <block wx:if="{{role === 'Treasurer' && item.status === 'Active - Awaiting Vendor Completion'}}">
              <text class="wait-text">Waiting for vendor...</text>
           </block>
 
@@ -77,7 +77,26 @@
              <text wx:else class="wait-text">Not your assigned job</text>
           </block>
 
+          <block wx:if="{{role === 'Treasurer' && item.status === 'Active - Awaiting Vendor Acceptance'}}">
+             <text class="wait-text">Awaiting vendor acceptance...</text>
+          </block>
+
+          <block wx:if="{{role === 'Vendor' && item.status === 'Active - Awaiting Vendor Acceptance'}}">
+             <view class="ai-analysis-box" style="margin-bottom: 12px; border-left-color: #818cf8;">
+               <text class="ai-title">Requirements</text>
+               <text class="ai-text" style="white-space: pre-wrap;">{{item.terms}}</text>
+             </view>
+             <view style="display: flex; gap: 8px; width: 100%;">
+               <button class="action-btn green-btn" style="flex: 1;" bindtap="handleVendorAccept" data-id="{{item.id}}">✅ Accept</button>
+               <button class="action-btn red-btn" style="flex: 1;" bindtap="handleVendorDecline" data-id="{{item.id}}">❌ Decline</button>
+             </view>
+          </block>
+
           <block wx:if="{{role === 'Vendor' && item.status === 'Pending Deposit'}}">
+             <view wx:if="{{item.terms}}" class="ai-analysis-box" style="margin-bottom: 10px; border-left-color: #818cf8;">
+               <text class="ai-title">Requirements:</text>
+               <text class="ai-text" style="white-space: pre-wrap;">{{item.terms}}</text>
+             </view>
              <text class="wait-text">Waiting for deposit...</text>
           </block>
 
@@ -85,21 +104,25 @@
              <text class="verifying-text animate-pulse">✨ AI Verifying Proof...</text>
           </block>
 
-          <block wx:if="{{role === 'President' && item.aiAnalysis}}">
+          <!-- Vendor Proof: shown to Treasurer whenever proof exists, regardless of AI status -->
+          <block wx:if="{{role === 'Treasurer' && item.vendorProofText}}">
              <view class="ai-analysis-box" style="margin-bottom: 8px; border-left-color: #0ea5e9;">
                <text class="ai-title">📝 Vendor Proof:</text>
                <text class="ai-text">{{item.vendorProofText}}</text>
-               <text wx:if="{{item.vendorProofUrl}}" class="ai-text" style="color: #3b82f6; margin-top: 4px; word-break: break-all;">Link: {{item.vendorProofUrl}}</text>
+               <text wx:if="{{item.vendorProofUrl}}" class="ai-text" style="color: #3b82f6; margin-top: 4px; word-break: break-all;">🔗 {{item.vendorProofUrl}}</text>
              </view>
+          </block>
 
+          <!-- AI Analysis box: only shown once AI has run -->
+          <block wx:if="{{role === 'Treasurer' && item.aiAnalysis}}">
              <view class="ai-analysis-box">
                <text class="ai-title">🤖 AI Assistant Analysis:</text>
                <text class="ai-text">{{item.aiAnalysis}}</text>
              </view>
           </block>
 
-          <block wx:if="{{item.status === 'Active - Awaiting President Approval'}}">
-             <block wx:if="{{role === 'President'}}">
+          <block wx:if="{{item.status === 'Active - Awaiting Treasurer Approval'}}">
+             <block wx:if="{{role === 'Treasurer'}}">
                <view class="approval-actions">
                  <button class="action-btn green-btn" bindtap="handleApproveEscrow" data-id="{{item.id}}">Approve</button>
                  <button class="action-btn red-btn" bindtap="handleDisputeEscrow" data-id="{{item.id}}">Dispute</button>
@@ -108,9 +131,20 @@
              </block>
              
              <block wx:if="{{role === 'Vendor'}}">
-               <text class="wait-text">Waiting for President to approve...</text>
+               <!-- Submitted proof summary -->
+               <view wx:if="{{item.vendorProofText}}" class="ai-analysis-box" style="margin-bottom: 8px; border-left-color: #818cf8;">
+                 <text class="ai-title">📋 Your Submitted Proof:</text>
+                 <text class="ai-text">{{item.vendorProofText}}</text>
+                 <text wx:if="{{item.vendorProofUrl}}" class="ai-text" style="color: #3b82f6; margin-top: 4px; word-break: break-all;">🔗 {{item.vendorProofUrl}}</text>
+               </view>
+               <button class="action-btn indigo-btn" style="margin-bottom: 8px;" bindtap="openVendorDialog" data-id="{{item.id}}">✏️ Edit Proof</button>
+               <text class="wait-text">Waiting for Treasurer to approve...</text>
                <text class="time-lock-text">{{item.countdownText || '⏳ Auto-releases in 48 hours'}}</text>
              </block>
+          </block>
+
+          <block wx:if="{{item.status === 'Declined - Vendor Refused'}}">
+             <text class="wait-text" style="color: #dc2626; font-weight: bold;">❌ Vendor declined this job.</text>
           </block>
 
           <block wx:if="{{item.status === 'Disputed - Manual Review'}}">
@@ -132,28 +166,49 @@
 
   <!-- Create Agreement Dialog -->
   <view class="dialog-mask" wx:if="{{isDialogOpen}}">
-    <view class="dialog fade-in-up">
+    <view class="dialog fade-in-up" style="margin-bottom: {{keyboardHeight}}px; transition: margin-bottom 0.25s ease;">
       <view class="dialog-header">
         <text class="dialog-title">New Escrow Agreement</text>
       </view>
-      <view class="dialog-body">
+      <scroll-view scroll-y style="max-height: {{dialogMaxHeight}}px; box-sizing: border-box;" class="dialog-body">
+        <!-- Vetting Reminder -->
+        <view class="vetting-reminder">
+          <text class="vetting-reminder-text">💡 Make sure you've agreed on terms and verified your vendor's skills before creating an escrow. VaultPact secures the payment but the vetting happens beforehand.</text>
+        </view>
         <view class="form-group">
-          <text class="label">Job Description</text>
-          <input class="input" placeholder="e.g. Hire DJ for £150" value="{{newTitle}}" bindinput="onTitleInput" />
+          <text class="label">Job Title</text>
+          <input class="input" placeholder="e.g. DJ or Caterer, etc" value="{{newTitle}}" bindinput="onTitleInput" maxlength="100000" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
         </view>
         <view class="form-group">
           <text class="label">Amount (£)</text>
-          <input class="input" type="number" placeholder="150" value="{{newAmount}}" bindinput="onAmountInput" />
+          <input class="input" type="number" placeholder="150" value="{{newAmount}}" bindinput="onAmountInput" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
         </view>
         <view class="form-group">
           <text class="label">Vendor Wallet Address</text>
-          <input class="input" placeholder="0x..." value="{{newVendorAddress}}" bindinput="onVendorAddressInput" />
+          <input class="input" placeholder="" value="{{newVendorAddress}}" bindinput="onVendorAddressInput" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
         </view>
         <view class="form-group">
-          <text class="label">Contract Terms &amp; Conditions</text>
-          <textarea class="textarea" placeholder="Detail the exact requirements for the job..." value="{{newTerms}}" bindinput="onTermsInput"></textarea>
+          <text class="label">Address and Postcode</text>
+          <input class="input" placeholder="e.g. London, EC1A 1BB" value="{{newLocation}}" bindinput="onLocationInput" maxlength="100000" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
         </view>
-      </view>
+        <view class="form-group">
+          <text class="label">Event Type</text>
+          <input class="input" placeholder="Please enter a detailed description of the event." value="{{newEventType}}" bindinput="onEventTypeInput" maxlength="100000" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
+        </view>
+        <view class="form-group">
+          <view style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <text class="label" style="margin-bottom: 0;">Requirements ({{activeTermsCount}}/6)</text>
+            <text wx:if="{{activeTermsCount < 6}}" style="font-size: 13px; color: #4f46e5;" bindtap="addTerm">+ Add Term</text>
+          </view>
+          <block wx:for="{{newTermsList}}" wx:key="index" wx:for-index="idx">
+            <view wx:if="{{idx < activeTermsCount}}" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <text style="font-size: 13px; color: #64748b; min-width: 18px;">{{idx + 1}}.</text>
+              <input class="input" style="flex: 1;" placeholder="Enter term {{idx + 1}}" value="{{item}}" bindinput="onTermsItemInput" data-index="{{idx}}" maxlength="100000" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeightChange" />
+              <text wx:if="{{activeTermsCount > 1}}" style="font-size: 18px; color: #dc2626; padding: 0 6px;" bindtap="removeTerm" data-index="{{idx}}">×</text>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
       <view class="dialog-footer">
         <button class="cancel-btn" bindtap="closeDialog">Cancel</button>
         <button class="submit-btn" bindtap="handleCreateAgreement">Create</button>
@@ -161,11 +216,11 @@
     </view>
   </view>
 
-  <!-- Vendor Proof Dialog -->
+  <!-- Vendor Proof Dialog (used for both initial submit and editing) -->
   <view class="dialog-mask" wx:if="{{isVendorDialogOpen}}">
     <view class="dialog fade-in-up">
       <view class="dialog-header">
-        <text class="dialog-title">Submit Proof of Work</text>
+        <text class="dialog-title">{{isEditingProof ? 'Edit Proof of Work' : 'Submit Proof of Work'}}</text>
       </view>
       <view class="dialog-body">
         <view class="terms-display-box">
@@ -174,16 +229,16 @@
         </view>
         <view class="form-group" style="margin-top: 16px;">
           <text class="label">Justification (How did you meet the terms?)</text>
-          <textarea class="textarea" placeholder="I completed the job by..." value="{{vendorProofText}}" bindinput="onProofTextInput"></textarea>
+          <textarea class="textarea" placeholder="I completed the job by..." value="{{vendorProofText}}" bindinput="onProofTextInput" maxlength="100000"></textarea>
         </view>
         <view class="form-group">
           <text class="label">Image / Receipt URL (Optional)</text>
-          <input class="input" placeholder="e.g. imgur.com/receipt.jpg" value="{{vendorProofUrl}}" bindinput="onProofUrlInput" />
+          <input class="input" placeholder="e.g. imgur.com/receipt.jpg" value="{{vendorProofUrl}}" bindinput="onProofUrlInput" maxlength="100000" />
         </view>
       </view>
       <view class="dialog-footer">
         <button class="cancel-btn" bindtap="closeVendorDialog">Cancel</button>
-        <button class="submit-btn indigo-bg" bindtap="handleMarkComplete">Run AI Scan</button>
+        <button class="submit-btn indigo-bg" bindtap="handleMarkComplete">{{isEditingProof ? 'Update & Re-scan' : 'Run AI Scan'}}</button>
       </view>
     </view>
   </view>
