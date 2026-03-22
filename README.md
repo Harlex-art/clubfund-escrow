@@ -32,8 +32,31 @@ The platform provides a secure bridge for societies to hire vendors with guarant
 *   **Auditability**: Complete, immutable history of agreements, proof-of-work, and release statuses.
 
 ## ARCHITECTURE / HOW WE BUILT IT
-![Architecture](YOUR_ARCHITECTURE_URL)
-<!-- Add architecture diagram here -->
+```mermaid
+sequenceDiagram
+    participant T as Treasurer
+    participant V as Vendor
+    participant VP as Vault Pact (Luffa)
+    participant EB as Endless Blockchain
+    participant AI as OpenAI Oracle
+    
+    T->>VP: Create Pact (Terms & Amount)
+    VP->>EB: Lock EDS Funds (Escrow)
+    V->>VP: Accept Job
+    Note over V,VP: Action: Vendor Completes Work
+    V->>VP: Submit Proof-of-Work (Text/URL)
+    VP->>AI: Send Proof against Pact Terms
+    AI-->>VP: Return Confidence Score & Analysis
+    alt Verification Passed
+        VP->>T: Dashboard Updates: Pass
+        T->>VP: Approve Release
+        VP->>EB: Execute Smart Contract Transfer
+        EB-->>V: Receive EDS Funds
+    else Verification Failed / Disputed
+        VP->>T: Flag Term Discrepancy
+        T->>VP: Trigger Mutual Settlement
+    end
+```
 
 ### Tech Stack
 *   **Frontend**: 
